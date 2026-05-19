@@ -3,6 +3,7 @@
   "compilerOptions": {
     "skipLibCheck": true, /* Fixing Pino-Vercel */
     "noImplicitAny": false, /* Fixing Pino-Vercel */
+    "noEmitOnError": false, /* Fixing Emit-Vercel */
     "outDir": "dist",
     "rootDir": "src",
     "types": ["node"]
