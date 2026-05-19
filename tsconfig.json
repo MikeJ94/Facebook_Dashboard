@@ -1,6 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
+  "skipLibCheck": true, /* Fixing Pino-Vercel */
+  "noImplicitAny": false, /* Fixing Pino-Vercel */
   "files": [],
   "references": [
     {
