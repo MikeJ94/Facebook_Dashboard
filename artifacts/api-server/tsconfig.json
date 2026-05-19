@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "skipLibCheck": true, /* Fixing Pino-Vercel */
-    "noImplicitAny": false /* Fixing Pino-Vercel */
+    "noImplicitAny": false, /* Fixing Pino-Vercel */
     "outDir": "dist",
     "rootDir": "src",
     "types": ["node"]
