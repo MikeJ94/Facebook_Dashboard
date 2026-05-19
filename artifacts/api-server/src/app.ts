@@ -4,7 +4,7 @@ import cors from "cors";
 import { pinoHttp } from 'pino-http';
 //import router from "./routes";
 // Por esto (añadiendo el archivo explícitamente):
-import router from './routes/index.js';
+import router from './routes/index';
 import { logger } from "./lib/logger";
 
 const app: Express = express();
@@ -33,7 +33,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//app.use("/api", router);
-app.use("/", router);
+app.use("/api", router);
+//app.use("/", router);
 
 export default app;
