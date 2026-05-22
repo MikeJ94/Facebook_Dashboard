@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "public": false,
+  "framework": "vite",
+  "installCommand": "pnpm install",
   "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/facebook-dashboard run build",
   "outputDirectory": "artifacts/facebook-dashboard/dist",
   "rewrites": [
