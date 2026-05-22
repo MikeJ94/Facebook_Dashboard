@@ -1,19 +1,9 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "artifacts/api-server/build.mjs",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "artifacts/api-server/build.mjs"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "artifacts/api-server/build.mjs"
+      "source": "/(.*)",
+      "destination": "/api"
     }
   ]
 }
