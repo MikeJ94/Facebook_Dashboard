@@ -1,12 +1,8 @@
 {
   "framework": null,
-  "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/facebook-dashboard run build",
-  "outputDirectory": "artifacts/facebook-dashboard/dist/public",
-  "env": {
-    "BASE_PATH": "/",
-    "NODE_ENV": "production"
-  },
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/facebook-dashboard run build",
+  "outputDirectory": "artifacts/facebook-dashboard/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
