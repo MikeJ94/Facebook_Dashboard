@@ -1,10 +1,17 @@
 {
   "version": 2,
-  "framework": "vite",
   "installCommand": "pnpm install",
   "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "builds": [
+    {
+      "src": "dist/index.mjs",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/index.mjs"
+    }
   ]
 }
