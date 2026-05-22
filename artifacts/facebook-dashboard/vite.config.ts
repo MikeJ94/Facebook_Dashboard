@@ -40,6 +40,7 @@ export default defineConfig(async () => {
     build: {
       outDir: path.resolve(import.meta.dirname, "dist"),
       emptyOutDir: true,
+      sourcemap: false, // 👈 AGREGA ESTA LÍNEA AQUÍ
     },
     server: {
       port,
