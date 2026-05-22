@@ -2,8 +2,8 @@
   "version": 2,
   "framework": "vite",
   "installCommand": "pnpm install",
-  "buildCommand": "cd artifacts/facebook-dashboard && BASE_PATH=/ NODE_ENV=production pnpm run build",
-  "outputDirectory": "artifacts/facebook-dashboard/dist",
+  "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm run build",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
