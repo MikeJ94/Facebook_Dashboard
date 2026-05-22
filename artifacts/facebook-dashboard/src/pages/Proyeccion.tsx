@@ -8,14 +8,17 @@ import { TrendingUp, Target, CheckCircle, AlertTriangle, Info } from "lucide-rea
 
 const COLORS = ["#1d4ed8", "#16a34a", "#d97706", "#9333ea", "#dc2626", "#0891b2"];
 
+const BENCHMARK_2025 = { prospectos: 56, colocaciones: 22 };
+const BENCHMARK_RATE = Math.round((BENCHMARK_2025.colocaciones / BENCHMARK_2025.prospectos) * 100);
+
 const CONVERSION_PRESETS = [
   { label: "Conservadora (15%)", value: 15 },
-  { label: "Moderada (25%)", value: 25 },
-  { label: "Optimista (40%)", value: 40 },
+  { label: `Benchmark 2025 (${BENCHMARK_RATE}%)`, value: BENCHMARK_RATE, isBenchmark: true },
+  { label: "Optimista (50%)", value: 50 },
 ];
 
 export default function Proyeccion() {
-  const [conversionRate, setConversionRate] = useState(25);
+  const [conversionRate, setConversionRate] = useState(BENCHMARK_RATE);
 
   const elegibles = useMemo(() => organizations.filter(isEligibleForInvestee), []);
   const noElegibles = useMemo(() => organizations.filter(o => !isEligibleForInvestee(o)), []);
@@ -75,13 +78,42 @@ export default function Proyeccion() {
         </p>
       </div>
 
+      {/* 2025 Benchmark banner */}
+      <div className="flex flex-wrap gap-4 items-center bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+            <Target className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">Benchmark Real 2025</p>
+            <p className="text-sm text-emerald-900 dark:text-emerald-200 font-medium">
+              {BENCHMARK_2025.colocaciones} colocaciones de {BENCHMARK_2025.prospectos} prospectos
+            </p>
+          </div>
+        </div>
+        <div className="flex items-baseline gap-1.5 ml-auto">
+          <span className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{BENCHMARK_RATE}%</span>
+          <span className="text-sm text-emerald-600 dark:text-emerald-500">tasa real de conversión</span>
+        </div>
+        <button
+          onClick={() => setConversionRate(BENCHMARK_RATE)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+            conversionRate === BENCHMARK_RATE
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "border-emerald-400 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
+          }`}
+        >
+          {conversionRate === BENCHMARK_RATE ? "Usando este benchmark" : "Aplicar benchmark"}
+        </button>
+      </div>
+
       {/* Conversion rate control */}
       <div className="bg-card border border-card-border rounded-xl p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              Tasa de Conversión 2025
+              Tasa de Conversión Proyectada
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Ajusta el porcentaje esperado de conversión de leads a investees
@@ -95,7 +127,11 @@ export default function Proyeccion() {
                 onClick={() => setConversionRate(p.value)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                   conversionRate === p.value
-                    ? "bg-primary text-primary-foreground border-primary"
+                    ? p.isBenchmark
+                      ? "bg-emerald-600 text-white border-emerald-600"
+                      : "bg-primary text-primary-foreground border-primary"
+                    : p.isBenchmark
+                    ? "border-emerald-400 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                     : "bg-muted text-muted-foreground border-border hover:border-primary hover:text-primary"
                 }`}
               >
@@ -107,8 +143,17 @@ export default function Proyeccion() {
 
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Tasa personalizada</span>
-            <span className="text-2xl font-bold text-primary">{conversionRate}%</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Tasa seleccionada</span>
+              {conversionRate === BENCHMARK_RATE && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 font-semibold">
+                  = Benchmark 2025
+                </span>
+              )}
+            </div>
+            <span className={`text-2xl font-bold ${conversionRate === BENCHMARK_RATE ? "text-emerald-600 dark:text-emerald-400" : "text-primary"}`}>
+              {conversionRate}%
+            </span>
           </div>
           <input
             data-testid="slider-conversion"
@@ -168,9 +213,11 @@ export default function Proyeccion() {
       <div className="flex items-start gap-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
         <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
         <div className="text-sm text-blue-800 dark:text-blue-300">
-          <strong>Criterio de elegibilidad:</strong> Solo se consideran organizaciones con <strong>Personería Jurídica (PJ)</strong>, <strong>RTN</strong> y <strong>CT</strong> completos — requerimiento mínimo para ser investee.
-          De {organizations.length} prospectos totales, <strong>{elegibles.length} ({Math.round((elegibles.length / organizations.length) * 100)}%)</strong> cumplen este criterio.
-          Aplicando la tasa de conversión del <strong>{conversionRate}%</strong>, se proyectan <strong>{proyectados} investees</strong>.
+          <strong>Criterio de elegibilidad:</strong> Solo se consideran organizaciones con <strong>PJ + RTN + CT</strong> completos.
+          De {organizations.length} prospectos actuales, <strong>{elegibles.length} ({Math.round((elegibles.length / organizations.length) * 100)}%)</strong> cumplen este criterio.
+          {" "}El benchmark real de 2025 fue <strong>{BENCHMARK_RATE}%</strong> ({BENCHMARK_2025.colocaciones}/{BENCHMARK_2025.prospectos}).
+          {" "}Aplicando la tasa actual de <strong>{conversionRate}%</strong>, se proyectan <strong>{proyectados} investees</strong>
+          {conversionRate === BENCHMARK_RATE ? " — igual al desempeño de 2025." : conversionRate > BENCHMARK_RATE ? ` — ${conversionRate - BENCHMARK_RATE} pp por encima del benchmark 2025.` : ` — ${BENCHMARK_RATE - conversionRate} pp por debajo del benchmark 2025.`}
         </div>
       </div>
 
