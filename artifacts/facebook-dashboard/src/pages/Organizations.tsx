@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { organizations, getPipelineStage } from "@/data/organizations";
-import { Search, Phone, MapPin, Users, CheckCircle, XCircle, FileText } from "lucide-react";
+import { Search, Phone, MapPin, Users, CheckCircle, XCircle, FileText, AlertTriangle, X, ChevronDown } from "lucide-react";
 
 const STAGE_COLORS: Record<string, string> = {
   "Presentado": "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400",
@@ -13,15 +13,25 @@ const STAGE_COLORS: Record<string, string> = {
 export default function Organizations() {
   const [search, setSearch] = useState("");
   const [filterStage, setFilterStage] = useState("Todos");
-  const [filterDept, setFilterDept] = useState("Todos");
+  const [selectedDepts, setSelectedDepts] = useState<string[]>([]);
   const [filterDoc, setFilterDoc] = useState("Todos");
+  const [filterNoAtendio, setFilterNoAtendio] = useState(false);
   const [selectedOrg, setSelectedOrg] = useState<typeof organizations[0] | null>(null);
+  const [deptOpen, setDeptOpen] = useState(false);
 
-  const depts = useMemo(() => {
+  const allDepts = useMemo(() => {
     const set = new Set<string>();
     organizations.forEach(o => { if (o.departamento) set.add(o.departamento.toUpperCase()); });
-    return ["Todos", ...Array.from(set).sort()];
+    return Array.from(set).sort();
   }, []);
+
+  const toggleDept = (dept: string) => {
+    setSelectedDepts(prev =>
+      prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
+    );
+  };
+
+  const clearDepts = () => setSelectedDepts([]);
 
   const filtered = useMemo(() => {
     return organizations.filter(o => {
@@ -32,15 +42,18 @@ export default function Organizations() {
       const matchSearch = !q || name.includes(q) || contact.includes(q) || obs.includes(q);
       const stage = getPipelineStage(o);
       const matchStage = filterStage === "Todos" || stage === filterStage;
-      const matchDept = filterDept === "Todos" || (o.departamento ?? "").toUpperCase() === filterDept;
+      const matchDept = selectedDepts.length === 0 || selectedDepts.includes((o.departamento ?? "").toUpperCase());
       const matchDoc =
         filterDoc === "Todos" ? true :
         filterDoc === "PJ+RTN+CT" ? o.pj && o.rtn && o.ct :
         filterDoc === "Con PJ" ? o.pj :
         filterDoc === "Sin PJ" ? !o.pj : true;
-      return matchSearch && matchStage && matchDept && matchDoc;
+      const matchNoAtendio = !filterNoAtendio || !!o.no_atendieron;
+      return matchSearch && matchStage && matchDept && matchDoc && matchNoAtendio;
     });
-  }, [search, filterStage, filterDept, filterDoc]);
+  }, [search, filterStage, selectedDepts, filterDoc, filterNoAtendio]);
+
+  const noAtendieronCount = useMemo(() => organizations.filter(o => o.no_atendieron).length, []);
 
   return (
     <div className="p-6 space-y-5">
@@ -62,12 +75,124 @@ export default function Organizations() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <FilterSelect label="Etapa" value={filterStage} onChange={setFilterStage}
-          options={["Todos", "Presentado", "Por Pitch", "Contactado", "Prospecto", "Sin Contacto"]} testId="select-stage" />
-        <FilterSelect label="Departamento" value={filterDept} onChange={setFilterDept} options={depts} testId="select-dept" />
-        <FilterSelect label="Documentación" value={filterDoc} onChange={setFilterDoc}
-          options={["Todos", "PJ+RTN+CT", "Con PJ", "Sin PJ"]} testId="select-doc" />
+
+        <FilterSelect
+          label="Etapa"
+          value={filterStage}
+          onChange={setFilterStage}
+          options={["Todos", "Presentado", "Por Pitch", "Contactado", "Prospecto", "Sin Contacto"]}
+          testId="select-stage"
+        />
+
+        {/* Multi-select Departamentos */}
+        <div className="relative" data-testid="multiselect-dept">
+          <button
+            onClick={() => setDeptOpen(v => !v)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${
+              selectedDepts.length > 0
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-card text-foreground hover:border-primary"
+            }`}
+          >
+            <span>
+              {selectedDepts.length === 0
+                ? "Todos los Departamentos"
+                : selectedDepts.length === 1
+                ? selectedDepts[0]
+                : `${selectedDepts.length} departamentos`}
+            </span>
+            {selectedDepts.length > 0 && (
+              <button
+                onClick={e => { e.stopPropagation(); clearDepts(); }}
+                className="ml-1 text-primary hover:text-primary/70"
+                data-testid="btn-clear-depts"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${deptOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {deptOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setDeptOpen(false)} />
+              <div className="absolute top-full left-0 mt-1 z-20 bg-card border border-border rounded-xl shadow-lg min-w-52 max-h-72 overflow-y-auto">
+                <div className="p-2 border-b border-border flex items-center justify-between px-3">
+                  <span className="text-xs font-semibold text-muted-foreground">Seleccionar departamentos</span>
+                  {selectedDepts.length > 0 && (
+                    <button onClick={clearDepts} className="text-xs text-primary hover:underline">Limpiar</button>
+                  )}
+                </div>
+                <div className="p-1">
+                  {allDepts.map(dept => (
+                    <button
+                      key={dept}
+                      data-testid={`dept-option-${dept}`}
+                      onClick={() => toggleDept(dept)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
+                        selectedDepts.includes(dept)
+                          ? "bg-primary/10 text-primary"
+                          : "text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                        selectedDepts.includes(dept) ? "bg-primary border-primary" : "border-border"
+                      }`}>
+                        {selectedDepts.includes(dept) && <CheckCircle className="w-3 h-3 text-white fill-white" />}
+                      </div>
+                      {dept}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <FilterSelect
+          label="Documentación"
+          value={filterDoc}
+          onChange={setFilterDoc}
+          options={["Todos", "PJ+RTN+CT", "Con PJ", "Sin PJ"]}
+          testId="select-doc"
+        />
+
+        {/* No atendieron filter */}
+        <button
+          data-testid="btn-filter-no-atendio"
+          onClick={() => setFilterNoAtendio(v => !v)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+            filterNoAtendio
+              ? "border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-950/30 dark:text-orange-400"
+              : "border-border bg-card text-muted-foreground hover:border-orange-400 hover:text-orange-600"
+          }`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          No atendieron
+          <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+            filterNoAtendio ? "bg-orange-200 text-orange-700 dark:bg-orange-900 dark:text-orange-300" : "bg-muted text-muted-foreground"
+          }`}>
+            {noAtendieronCount}
+          </span>
+        </button>
       </div>
+
+      {/* Active filters chips */}
+      {selectedDepts.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedDepts.map(d => (
+            <span
+              key={d}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+            >
+              {d}
+              <button onClick={() => toggleDept(d)} className="hover:text-primary/70">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Table */}
       <div className="bg-card border border-card-border rounded-xl overflow-hidden">
@@ -83,7 +208,7 @@ export default function Organizations() {
                 <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Años</th>
                 <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Docs</th>
                 <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Etapa</th>
-                <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Delegado</th>
+                <th className="px-4 py-3 text-center font-semibold text-muted-foreground">Alerta</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -93,7 +218,7 @@ export default function Organizations() {
                   <tr
                     key={idx}
                     data-testid={`row-org-${org.no}`}
-                    className="hover:bg-muted/30 cursor-pointer transition-colors"
+                    className={`hover:bg-muted/30 cursor-pointer transition-colors ${org.no_atendieron ? "bg-orange-50/50 dark:bg-orange-950/10" : ""}`}
                     onClick={() => setSelectedOrg(org)}
                   >
                     <td className="px-4 py-3 text-muted-foreground">{org.no}</td>
@@ -130,8 +255,18 @@ export default function Organizations() {
                         {stage}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center text-xs text-muted-foreground">
-                      {org.delegado_charlie ? "Don Charlie" : org.delegado_carlos ? "Carlos" : "—"}
+                    <td className="px-4 py-3 text-center">
+                      {org.no_atendieron ? (
+                        <span
+                          title={org.no_atendieron}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400"
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          No atendió
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </td>
                   </tr>
                 );
@@ -166,6 +301,16 @@ export default function Organizations() {
                   {getPipelineStage(selectedOrg)}
                 </span>
               </div>
+
+              {selectedOrg.no_atendieron && (
+                <div className="flex items-start gap-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-xl p-3">
+                  <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-orange-700 dark:text-orange-400 mb-0.5">No asistió a la reunión programada</p>
+                    <p className="text-sm text-orange-800 dark:text-orange-300">{selectedOrg.no_atendieron}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <DetailItem label="Contacto" value={selectedOrg.nombre_contacto} />
@@ -235,7 +380,7 @@ export default function Organizations() {
   );
 }
 
-function FilterSelect({ label, value, onChange, options, testId }: {
+function FilterSelect({ label: _label, value, onChange, options, testId }: {
   label: string; value: string; onChange: (v: string) => void; options: string[]; testId?: string;
 }) {
   return (

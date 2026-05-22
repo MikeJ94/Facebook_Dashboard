@@ -4,7 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import Organizations from "@/pages/Organizations";
-import { LayoutDashboard, Building2, Menu, X } from "lucide-react";
+import Proyeccion from "@/pages/Proyeccion";
+import { LayoutDashboard, Building2, TrendingUp, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
@@ -12,6 +13,7 @@ const queryClient = new QueryClient();
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/organizaciones", label: "Organizaciones", icon: Building2 },
+  { href: "/proyeccion", label: "Proyección", icon: TrendingUp },
 ];
 
 function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -76,6 +78,7 @@ function AppShell() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/organizaciones" component={Organizations} />
+            <Route path="/proyeccion" component={Proyeccion} />
             <Route component={NotFound} />
           </Switch>
         </main>
