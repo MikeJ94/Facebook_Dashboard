@@ -1,7 +1,7 @@
 {
   "framework": null,
   "installCommand": "pnpm install",
-  "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/facebook-dashboard run build",
+  "buildCommand": "BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/facebook-dashboard run build && cp -r artifacts/facebook-dashboard/dist dist",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
