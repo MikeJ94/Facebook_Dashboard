@@ -1,0 +1,12 @@
+{
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm --filter @workspace/facebook-dashboard run build",
+  "outputDirectory": "artifacts/facebook-dashboard/dist/public",
+  "env": {
+    "BASE_PATH": "/",
+    "NODE_ENV": "production"
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
